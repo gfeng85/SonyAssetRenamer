@@ -1,5 +1,7 @@
 package net.gfeng;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -27,23 +29,30 @@ public class SonyAssetRenamer {
 
     public static String ffmpegPath ="C:\\app\\ffmpeg-4.2.1-win64-static\\bin\\ffmpeg";//ffmpeg安装目录
     public static String exifTool="c:\\app\\exiftool-11.84\\exiftool.exe";//exiftool可执行文件名
-    public static String targetPath="D:\\Picture\\ARW";//awr/mp4/xml文件目录
-
+    public static String targetPaths[]={"D:\\Picture\\ARW","D:\\Picture\\MP4"};//awr/mp4/xml文件目录
+    public final static Logger logger = LoggerFactory.getLogger("root");
 
     public static void main(String[] args) {
-        File folder=new File(targetPath);
-        File[] files = folder.listFiles();
-        for(File f:files){
-            if (f != null && !f.isDirectory() && f.getName().startsWith("C") && f.getName().endsWith(".MP4")) {
-                String newFileName = getVideoTime(f.getAbsolutePath(),"Asia/Shanghai");
-                fileRename(f,newFileName,".MP4");
-            }else if(f != null && !f.isDirectory() && f.getName().startsWith("C") && f.getName().endsWith("M01.XML")){
-                String newFileName = parseXml(f);
-                fileRename(f,newFileName,".XML");
-            }else if (f != null && !f.isDirectory() && f.getName().startsWith("DSC") && f.getName().endsWith(".ARW")) {
-                String newFileName = getArwTime(f.getAbsolutePath());
-                fileRename(f,newFileName,".ARW");
+        logger.info("program start!");
+        String userDir = System.getProperty("user.dir");
+        File userDirFile = new File(userDir);
+        for(File folder:userDirFile.listFiles()){
+            if(folder.isDirectory()&&(folder.getName().startsWith("ARW")||folder.getName().startsWith("MP4"))){
+                File[] files = folder.listFiles();
+                for(File f:files){
+                    if (f != null && !f.isDirectory() && f.getName().startsWith("C") && f.getName().endsWith(".MP4")) {
+                        String newFileName = getVideoTime(f.getAbsolutePath(),"Asia/Shanghai");
+                        fileRename(f,newFileName,".MP4");
+                    }else if(f != null && !f.isDirectory() && f.getName().startsWith("C") && f.getName().endsWith("M01.XML")){
+                        String newFileName = parseXml(f);
+                        fileRename(f,newFileName,".XML");
+                    }else if (f != null && !f.isDirectory() && f.getName().startsWith("DSC") && f.getName().endsWith(".ARW")) {
+                        String newFileName = getArwTime(f.getAbsolutePath());
+                        fileRename(f,newFileName,".ARW");
+                    }
+                }
             }
+
         }
     }
 
@@ -88,7 +97,7 @@ public class SonyAssetRenamer {
             while(!f.renameTo(new File(f.getParent()+"\\"+newFileName+"-"+i+ext))){//若发生文件重名，则在文件名后加上数字
                 i++;
                 if(i>100){
-                    System.out.println(f.getAbsolutePath()+" rename error!!!");
+                    logger.info(f.getAbsolutePath()+" rename error!!!");
                     break;
                 }
             }
@@ -96,7 +105,7 @@ public class SonyAssetRenamer {
         }else{
             newName=newFileName+ext;
         }
-        System.out.println("rename:"+f.getName()+"->"+newName);
+        logger.info("rename:"+f.getName()+"->"+newName);
     }
 
     /**

@@ -1,0 +1,27 @@
+<configuration>
+    <property name="log.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS} - %msg%n" />
+    <appender name="logAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>SonyAssetRenamer.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>SonyAssetRenamer.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- each file should be at most 100MB, keep 60 days worth of history, but at most 20GB -->
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>60</maxHistory>
+            <totalSizeCap>20GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${log.pattern}</pattern>
+            <charset>utf-8</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+    </appender>
+
+    <root level="debug">
+        <appender-ref ref="logAppender" />
+    </root>
+</configuration>
