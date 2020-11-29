@@ -39,14 +39,14 @@ public class SonyAssetRenamer {
                 if(arg!=null && arg.contains("=")){
                     String[] argKeyPair=arg.split("=");
                     if (argKeyPair.length==2){
-                        switch(argKeyPair[0]) {
+                        switch(argKeyPair[0].toLowerCase()) {
                             case "ffmpeg":
                                 ffmpegPath=argKeyPair[1].replaceAll("\\\\","/");
                                 break;
-                            case "exifTool":
+                            case "exiftool":
                                 exifTool=argKeyPair[1].replaceAll("\\\\","/");
                                 break;
-                            case "userDir":
+                            case "userdir":
                                 userDir=argKeyPair[1].replaceAll("\\\\","/");
                                 break;
                         }
@@ -71,9 +71,9 @@ public class SonyAssetRenamer {
                     }else if (f != null && !f.isDirectory() && f.getName().startsWith("DSC") && f.getName().endsWith(".ARW")) {
                         File xmpFile=new File(f.getAbsolutePath().substring(0,f.getAbsolutePath().length()-3)+"xmp");
                         String newFileName = getArwTime(f.getAbsolutePath());
-                        fileRename(f,newFileName,".ARW");
+                        newFileName=fileRename(f,newFileName,".ARW");
                         if(xmpFile.exists()){
-                            fileRename(xmpFile,newFileName,".xmp");
+                            fileRename(xmpFile,newFileName.length()>4?newFileName.substring(0,newFileName.length()-4):newFileName,".xmp");
                         }
                     }
                 }
@@ -116,13 +116,13 @@ public class SonyAssetRenamer {
      * @param newFileName
      * @param ext
      */
-    private static void fileRename(File f, String newFileName, String ext) {
+    private static String fileRename(File f, String newFileName, String ext) {
         String newName=null;
         if(!f.renameTo(new File(f.getParent()+"\\"+newFileName+ext))){
             int i=1;
-            while(!f.renameTo(new File(f.getParent()+"\\"+newFileName+"-"+i+ext))){//若发生文件重名，则在文件名后加上数字
+            while(!f.renameTo(new File(f.getParent()+"\\"+newFileName+"-"+i+ext))){//若发生文件重名，则在文件名后加上数字(如在同一秒内连按两次快门导致的连拍（非连拍），会走入分支)
                 i++;
-                if(i>100){
+                if(i>100){//不可能一秒连按100此快门以上
                     logger.info(f.getAbsolutePath()+" rename error!!!");
                     break;
                 }
@@ -132,6 +132,7 @@ public class SonyAssetRenamer {
             newName=newFileName+ext;
         }
         logger.info("rename:"+f.getName()+"->"+newName);
+        return newName;
     }
 
     /**
