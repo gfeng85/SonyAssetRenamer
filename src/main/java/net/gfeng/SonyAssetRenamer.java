@@ -29,12 +29,34 @@ public class SonyAssetRenamer {
 
     public static String ffmpegPath ="C:\\app\\ffmpeg-4.2.1-win64-static\\bin\\ffmpeg";//ffmpeg安装目录
     public static String exifTool="c:\\app\\exiftool-11.84\\exiftool.exe";//exiftool可执行文件名
-    public static String targetPaths[]={"D:\\Picture\\ARW","D:\\Picture\\MP4"};//awr/mp4/xml文件目录
     public final static Logger logger = LoggerFactory.getLogger("root");
 
     public static void main(String[] args) {
         logger.info("program start!");
         String userDir = System.getProperty("user.dir");
+        if(args.length>0){
+            for(String arg:args){
+                if(arg!=null && arg.contains("=")){
+                    String[] argKeyPair=arg.split("=");
+                    if (argKeyPair.length==2){
+                        switch(argKeyPair[0]) {
+                            case "ffmpeg":
+                                ffmpegPath=argKeyPair[1].replaceAll("\\\\","/");
+                                break;
+                            case "exifTool":
+                                exifTool=argKeyPair[1].replaceAll("\\\\","/");
+                                break;
+                            case "userDir":
+                                userDir=argKeyPair[1].replaceAll("\\\\","/");
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        logger.info("ffmpegPath="+ffmpegPath);
+        logger.info("exifTool="+exifTool);
+        logger.info("userDir="+userDir);
         File userDirFile = new File(userDir);
         for(File folder:userDirFile.listFiles()){
             if(folder.isDirectory()&&(folder.getName().startsWith("ARW")||folder.getName().startsWith("MP4"))){
@@ -47,8 +69,12 @@ public class SonyAssetRenamer {
                         String newFileName = parseXml(f);
                         fileRename(f,newFileName,".XML");
                     }else if (f != null && !f.isDirectory() && f.getName().startsWith("DSC") && f.getName().endsWith(".ARW")) {
+                        File xmpFile=new File(f.getAbsolutePath().substring(0,f.getAbsolutePath().length()-3)+"xmp");
                         String newFileName = getArwTime(f.getAbsolutePath());
                         fileRename(f,newFileName,".ARW");
+                        if(xmpFile.exists()){
+                            fileRename(xmpFile,newFileName,".xmp");
+                        }
                     }
                 }
             }
